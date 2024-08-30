@@ -149,7 +149,7 @@ class Tapper:
                 else:
                     self.tapsEnergy = data_response['multiTapsEnergy']
                 logger.info(
-                    f"Account name: {data_response['username']} | Balance: <yellow>{data_response['balance_USD']} USD</yellow>, <yellow>{int(data_response['balance_BTC']) / 100000} BTC</yellow>, Power: <yellow>{data_response['balance_CEXP']} CEXP</yellow>, multiTapsEnergy: <yellow>{data_response['multiTapsEnergy']}/{data_response['multiTapsEnergyLimit']}</yellow> ")
+                    f"Account name: {data_response['first_name']} | Balance: <yellow>{data_response['balance_USD']} USD</yellow>, <yellow>{int(data_response['balance_BTC']) / 100000} BTC</yellow>, Power: <yellow>{data_response['balance_CEXP']} CEXP</yellow>, multiTapsEnergy: <yellow>{data_response['multiTapsEnergy']}/{data_response['multiTapsEnergyLimit']}</yellow> ")
             except Exception as e:
                 logger.error(f"Error while getting user data: {e} .Try again after 30s")
                 await asyncio.sleep(30)
