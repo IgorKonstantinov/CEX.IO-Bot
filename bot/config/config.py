@@ -9,7 +9,9 @@ class Settings(BaseSettings):
 
     AUTO_TAP: bool = True
     RANDOM_TAPS_COUNT: list = [25, 75]
+    SLEEP_RANDOM: list = [10, 15]
     SLEEP_BETWEEN_TAPS: list = [25, 35]
+    SLEEP_BETWEEN_MINING: list[int] = [600, 900]
     AUTO_CONVERT: bool = True
     MINIMUM_TO_CONVERT: float = 0.1
     AUTO_BUY_UPGRADE: bool = True

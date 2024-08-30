@@ -19,7 +19,7 @@ from bot.utils import logger
 from bot.exceptions import InvalidSession
 from .headers import headers
 
-from random import randint, uniform
+from random import randint
 import traceback
 
 # api endpoint
@@ -52,9 +52,10 @@ class Tapper:
         self.task = None
         self.card = None
         self.startedTask = []
-        self.skip = ['register_on_cex_io']
+        self.skip = ['register_on_cex_io', 'boost_telegram']
         self.card1 = None
         self.potential_card = {}
+        self.tapsEnergy: int = 1000
 
     async def get_tg_web_data(self, proxy: str | None) -> str:
         logger.info(f"Getting data for {self.session_name}")
@@ -133,17 +134,22 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_profile, json=data)
         if response.status == 200:
             try:
                 json_response = await response.json()
+                #print(json_response)
                 data_response = json_response['data']
                 self.coin_balance = data_response['balance_USD']
+                if data_response['multiTapsEnergy'] == 0:
+                    self.tapsEnergy = 1000
+                else:
+                    self.tapsEnergy = data_response['multiTapsEnergy']
                 logger.info(
-                    f"Account name: {data_response['first_name']} - Balance: <yellow>{data_response['balance_USD']}</yellow> - Btc balance: <yellow>{int(data_response['balance_BTC']) / 100000}</yellow> - Power: <yellow>{data_response['balance_CEXP']}</yellow> CEXP")
+                    f"Account name: {data_response['username']} | Balance: <yellow>{data_response['balance_USD']} USD</yellow>, <yellow>{int(data_response['balance_BTC']) / 100000} BTC</yellow>, Power: <yellow>{data_response['balance_CEXP']} CEXP</yellow>, multiTapsEnergy: <yellow>{data_response['multiTapsEnergy']}/{data_response['multiTapsEnergyLimit']}</yellow> ")
             except Exception as e:
                 logger.error(f"Error while getting user data: {e} .Try again after 30s")
                 await asyncio.sleep(30)
@@ -159,34 +165,32 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {
-                "tapsEnergy": "1000",
+                "tapsEnergy": str(self.tapsEnergy),
                 "tapsToClaim": str(taps),
                 "tapsTs": time_unix
             }
         }
-        # print(int((time()) * 1000) - time_unix)
+        #print('data:', data)
         response = await http_client.post(api_tap, json=data)
         if response.status == 200:
             json_response = await response.json()
             data_response = json_response['data']
             self.coin_balance = data_response['balance_USD']
-            logger.info(f"{self.session_name} | Tapped <cyan>{taps}</cyan> times | Coin balance: <cyan>{data_response['balance_USD']}</cyan>")
+            logger.success(f"{self.session_name} | Bot action: <red>[tap/{taps}]</red>")
         else:
-
             json_response = await response.json()
             if "too slow" in json_response['data']['reason']:
-                logger.error(f'{self.session_name} | <red> Tap failed - please stop the code and open the bot in telegram then tap 1-2 times and run this code again. it should be worked!</red>')
+                logger.error(f'{self.session_name} | <red> Tap failed - too slow</red> Response: {json_response}')
             else:
-                print(json_response)
-                logger.error(f'{self.session_name} | <red> Tap failed - response code: {response.status}</red>')
+                logger.error(f'{self.session_name} | <red> Tap failed - response code: {response.status}</red> Response: {json_response}')
 
     async def claim_crypto(self, http_client: aiohttp.ClientSession, authToken):
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_claimBTC, json=data)
@@ -206,7 +210,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_priceData, json=data)
@@ -224,7 +228,7 @@ class Tapper:
             data = {
                 "devAuthData": int(self.user_id),
                 "authData": str(authToken),
-                "platform": "ios",
+                "platform": "android",
                 "data": {
                     "fromCcy": "BTC",
                     "toCcy": "USD",
@@ -246,7 +250,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_checkref, json=data)
@@ -260,7 +264,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_claimRef, json=data)
@@ -275,7 +279,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_data, json=data)
@@ -290,7 +294,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_checkCompletedTask, json=data)
@@ -311,7 +315,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {
                 "taskId": taskId
             }
@@ -327,7 +331,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {
                 "taskId": taskId
             }
@@ -346,7 +350,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {
                 "taskId": taskId
             }
@@ -363,7 +367,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {}
         }
         response = await http_client.post(api_getUserCard, json=data)
@@ -425,7 +429,7 @@ class Tapper:
         data = {
             "devAuthData": int(self.user_id),
             "authData": str(authToken),
-            "platform": "ios",
+            "platform": "android",
             "data": {
                 "categoryId": Buydata['categoryId'],
                 "ccy": Buydata['ccy'],
@@ -443,29 +447,31 @@ class Tapper:
             logger.error(f"{self.session_name} | <red>Error while upgrade card {Buydata['upgradeId']} to {Buydata['nextLevel']}. Response code: {response.status}</red>")
 
     async def run(self, proxy: str | None) -> None:
-        access_token_created_time = 0
+        authToken = ""
         proxy_conn = ProxyConnector().from_url(proxy) if proxy else None
 
-        headers["user-agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
-        http_client = CloudflareScraper(headers=headers, connector=proxy_conn)
+        #headers["user-agent"] = generate_random_user_agent(device_type='android', browser_type='chrome')
+        #http_client = CloudflareScraper(headers=headers)
 
         if proxy:
             await self.check_proxy(http_client=http_client, proxy=proxy)
-        authToken = ""
-        token_live_time = randint(3500, 3600)
+
         while True:
             try:
-                if time() - access_token_created_time >= token_live_time or authToken == "":
-                    logger.info(f"{self.session_name} | Update auth token...")
-                    tg_web_data = await self.get_tg_web_data(proxy=proxy)
-                    # print(self.user_id)
-                    authToken = tg_web_data
-                    access_token_created_time = time()
-                    token_live_time = randint(3500, 3600)
-                    await asyncio.sleep(delay=randint(10, 15))
+                random_sleep = randint(*settings.SLEEP_RANDOM)
+                mining_sleep = randint(*settings.SLEEP_BETWEEN_MINING)
+
+                logger.info(f"{self.session_name} | Update auth token...")
+
+                http_client = CloudflareScraper(headers=headers)
+                tg_web_data = await self.get_tg_web_data(proxy=proxy)
+                authToken = tg_web_data
                 logger.info(f"Session {self.first_name} {self.last_name} logged in.")
-                # print(authToken)
+                logger.info(f"{self.session_name} | Sleep {random_sleep:,}s after: <g>[auth]</g> ")
+                await asyncio.sleep(delay=random_sleep)
+
                 await self.get_user_info(http_client, authToken)
+
                 if self.card is None or self.task is None:
                     await self.fetch_data(http_client, authToken)
                 if settings.AUTO_TASK and self.task:
@@ -484,21 +490,29 @@ class Tapper:
                             else:
                                 await self.startTask(http_client, authToken, task['taskId'])
 
-                runtime = 10
+                logger.info(f"{self.session_name} | Sleep {random_sleep:,}s before: <g>[tap]</g> ")
+                await asyncio.sleep(delay=random_sleep)
+                #await self.tap(http_client, authToken, 0)
+                #await asyncio.sleep(randint(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1]))
+
                 if settings.AUTO_TAP:
-                    while runtime > 0:
-                        taps = str(randint(settings.RANDOM_TAPS_COUNT[0], settings.RANDOM_TAPS_COUNT[1]))
+                    while self.tapsEnergy > 50:
+                        taps = randint(settings.RANDOM_TAPS_COUNT[0], settings.RANDOM_TAPS_COUNT[1])
+                        sleep = randint(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1])
+                        self.tapsEnergy = self.tapsEnergy - taps + sleep
                         await self.tap(http_client, authToken, taps)
-                        await asyncio.sleep(1)
-                        await self.claim_crypto(http_client, authToken)
-                        runtime -= 1
-                        await asyncio.sleep(uniform(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1]))
+                        logger.info(f"{self.session_name} | energy data: <c>{self.tapsEnergy}/1000</c> | sleep: {sleep}s")
+                        await asyncio.sleep(delay=sleep)
+                    else:
+                        taps = self.tapsEnergy
+                        self.tapsEnergy = 0
+                        await self.tap(http_client, authToken, taps)
+
                     logger.info(f"{self.session_name} | resting and upgrade...")
+
                 else:
-                    while runtime > 0:
-                        await self.claim_crypto(http_client, authToken)
-                        runtime -= 1
-                        await asyncio.sleep(uniform(15, 25))
+                    await self.claim_crypto(http_client, authToken)
+                    await asyncio.sleep(delay=random_sleep)
                     logger.info(f"{self.session_name} | resting and upgrade...")
 
                 if settings.AUTO_CLAIM_SQUAD_BONUS:
@@ -521,17 +535,19 @@ class Tapper:
                                     await self.buyUpgrade(http_client, authToken, sorted_potential_card[card])
                                     break
 
-                delay_time = randint(60, 120)
-                logger.info(f"{self.session_name} | waiting {delay_time} seconds...")
-                await asyncio.sleep(delay=delay_time)
+                #Final SLEEP
+                logger.info(f"{self.session_name} | Sleep {mining_sleep:,}s")
+                await http_client.close()
+                await asyncio.sleep(delay=mining_sleep)
+
             except InvalidSession as error:
                 raise error
 
             except Exception as error:
                 traceback.print_exc()
                 logger.error(f"{self.session_name} | Unknown error: {error}")
+                await http_client.close()
                 await asyncio.sleep(delay=randint(60, 120))
-
 
 async def run_tapper(tg_client: Client, proxy: str | None):
     try:
