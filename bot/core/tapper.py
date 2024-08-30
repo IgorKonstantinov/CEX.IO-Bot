@@ -492,13 +492,13 @@ class Tapper:
 
                 logger.info(f"{self.session_name} | Sleep {random_sleep:,}s before: <g>[tap]</g> ")
                 await asyncio.sleep(delay=random_sleep)
-                #await self.tap(http_client, authToken, 0)
-                #await asyncio.sleep(randint(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1]))
+                await self.tap(http_client, authToken, 0)
+                await asyncio.sleep(delay=random_sleep)
 
                 if settings.AUTO_TAP:
                     while self.tapsEnergy > 50:
-                        taps = randint(settings.RANDOM_TAPS_COUNT[0], settings.RANDOM_TAPS_COUNT[1])
-                        sleep = randint(settings.SLEEP_BETWEEN_TAPS[0], settings.SLEEP_BETWEEN_TAPS[1])
+                        taps = randint(*settings.RANDOM_TAPS_COUNT)
+                        sleep = randint(*settings.SLEEP_BETWEEN_TAPS)
                         self.tapsEnergy = self.tapsEnergy - taps + sleep
                         await self.tap(http_client, authToken, taps)
                         logger.info(f"{self.session_name} | energy data: <c>{self.tapsEnergy}/1000</c> | sleep: {sleep}s")
